@@ -28,7 +28,7 @@ tar_source()
 
 # Replace the target list below with your own:
 list(
-  tar_target(file, "/home/daniel/projects/data-logo-project/Data.csv", format = "file"),
+  tar_target(file, "../Data.csv", format = "file"),
   tar_target(data, read_csv(file) %>%
                mutate(subj.number = 1:19,
                  difference_score = `Score 1` - `Score 2`,
