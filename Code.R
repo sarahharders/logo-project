@@ -24,6 +24,7 @@ library(lsr)
 
 data <- read_excel("C:/Users/harde/Desktop/data-logo-project/Data.xlsx")
 
+
 # Creating Sub-scores
 
 data$Sprachverständnispre <- ((data$Handlungsanweisung1/4) + (data$Leseverständnis1/18) + (data$`Farb-Figur1`/20) + (data$`Auditives Sprachverständnis1`/18))/4
@@ -194,8 +195,6 @@ dev.off()
 tmp <- data_long %>% group_by(variable) %>% summarise(prescore = mean(prescore, na.rm =T ))
 
 
-tmp$mean
-
 svg("plot2.svg")
 ggplot(tmp, aes(x = variable, y = prescore)) +
   geom_line(alpha = 0.5, group = 1, size = 2.5) +
@@ -204,7 +203,7 @@ ggplot(tmp, aes(x = variable, y = prescore)) +
   theme_minimal()+
   theme_apa()  + ylim(-20, 45)
 dev.off()
-getwd()
+
 
 ######## Pre-Score
 
@@ -214,24 +213,28 @@ data_long <- data %>%
   mutate(subj.number = subj.number) %>%
   pivot_longer(cols = -subj.number, names_to = "variable", values_to = "Prescore")
 
-Naming = (data$Benennen1_noout*100)
-Repetition = (data$Nachsprechen1_noout*100)
-'Written Language' = (data$Schriftsprachepre*100)
-'Auditory Comprehension' = (data$Sprachverständnispre*100)
-mean(data$Benennen1_noout*100, na.rm = T)
-mean(data$Nachsprechen1_noout*100, na.rm = T)
-mean(data$Schriftsprachepre*100, na.rm = T)
-mean(data$Sprachverständnispre*100, na.rm = T)
 
 # Plot with pre-scores per participant
-
+svg("plot3.svg")
 ggplot(data_long, aes(x = variable, y = Prescore, group = subj.number, color = as.factor(subj.number))) +
   geom_line(alpha = 0.75) +
   geom_point() +
   labs(x = NULL, y = "Pre-score (%)") +
   theme_minimal() +
   theme_apa() +
-  guides(color = guide_legend(title = "Legend"))
+  guides(color = guide_legend(title = "Legend")) + theme(legend.position = "none") + ylim(0,100)
+dev.off()
+tmp <- data_long %>% group_by(variable) %>% summarise(prescore = mean(Prescore, na.rm =T ))
+
+svg("plot4.svg")
+ggplot(tmp, aes(x = variable, y = prescore)) +
+  geom_line(alpha = 0.5, group = 1, size = 2.5) +
+  geom_point() +
+  labs(x = NULL, y = "Change-score (%)") +
+  theme_minimal()+
+  theme_apa()  + ylim(0, 100)
+dev.off()
+
 
 ######## CETI
 
@@ -259,9 +262,12 @@ ggplot(data_long, aes(x = variable, y = Prescore, group = subj.number, color = a
 
 ######## Creating an Overall Mean for Correlational Analysis without written language
 
-pre_mean = ((data$Benennen1_noout) + (data$Sprachverständnispre) + (data$Nachsprechen1_noout)/3)
-post_mean = ((data$Benennen2_noout) + (data$Sprachverständnispost) + (data$Nachsprechen2_noout)/3)
+pre_mean = ((data$Benennen1_noout) + (data$Sprachverständnispre) + (data$Nachsprechen1_noout)+ (data$Schriftsprachepre)/4)
+post_mean = ((data$Benennen2_noout) + (data$Sprachverständnispost) + (data$Nachsprechen2_noout) +(data$Schriftsprachepost)/4)
 ACL_change <- post_mean - pre_mean
+
+t.test(post_mean, pre_mean, paired = TRUE)
+plot(ACL_change)
 
 # Correlation
 
@@ -269,7 +275,7 @@ cor.test(ACL_change, data$difference_ceti_noout, na.rm = T)
 
 # Plot Correlation
 
-plot(scale(data$difference_ceti_noout), ACL_change,
+plot(data$difference_ceti_noout, ACL_change,
      main = paste("Correlation:", correlation, "\n",
                   "p-value:", p_value),
      xlab = "CETI",
@@ -321,7 +327,7 @@ variable_pairs <- list(
 for (pair in variable_pairs) {
   i <- pair[1]
   j <- pair[2]
-
+}
   # Compute correlation and p-value
 
   cor_result <- cor.test(variable_matrix[, i], variable_matrix[, j], na.rm = T)
@@ -340,18 +346,41 @@ for (pair in variable_pairs) {
 #Third Analysis
 ############################################################
 
-model1<- lm(Benennen_change_noout ~ Alter + Yearsincestroke + Benennen1_noout, data = data)%>% summary()
-model1<- lm(Sprachverständnis_change_noout ~ Alter + Yearsincestroke + Sprachverständnispre, data = data) %>% summary()
-model1<- lm(Schriftsprache_change_noout ~ Alter + Yearsincestroke + Schriftsprachepre, data = data) %>% summary()
-model1<- lm(Nachsprechen_change_noout ~ Alter + Yearsincestroke + Nachsprechen1_noout, data = data) %>% summary()
-model1<- lm(difference_ceti_noout ~ Alter + Yearsincestroke + CETI1_noout, data = data) %>% summary()
 
+# testing homoskedasticity
+cor((data$Alter, data$Yearsincestroke), na.rm = T)
+cor(data$Alter, data$Benennen1_noout)
+cor(data$Alter, data$Sprachverständnispre)
+cor(data$Alter, data$Schriftsprachepre)
+cor(data$Alter, data$Nachsprechen1_noout)
+cor(data$Yearsincestroke, data$Benennen1_noout)
+cor(data$Yearsincestroke, data$Sprachverständnispre)
+cor(data$Yearsincestroke, data$Schriftsprachepre)
+cor(data$Yearsincestroke, data$Nachsprechen1_noout)
 
-plot(model1)
-
+# Creating models
+model1<- lm(Benennen_change_noout ~ Alter + Yearsincestroke + Benennen1_noout, data = data)
+model2<- lm(Sprachverständnis_change_noout ~ Alter + Yearsincestroke + Sprachverständnispre, data = data)
+model3<- lm(Schriftsprache_change_noout ~ Alter + Yearsincestroke + Schriftsprachepre, data = data)
+model4<- lm(Nachsprechen_change_noout ~ Alter + Yearsincestroke + Nachsprechen1_noout, data = data)
 
 # Visual inspection of Q-Q plot for normality of residuals
 densityPlot(model1$residuals)
+densityPlot(model2$residuals)
+densityPlot(model3$residuals)
+densityPlot(model4$residuals)
+
+# Visual inspection of Scatterplot for linearity
+plot(model1)
+plot(model2)
+plot(model3)
+plot(model4)
+
+# Results of Regression
+model1<- lm(Benennen_change_noout ~ Alter + Yearsincestroke + Benennen1_noout, data = data)%>% summary()
+model2<- lm(Sprachverständnis_change_noout ~ Alter + Yearsincestroke + Sprachverständnispre, data = data) %>% summary()
+model3<- lm(Schriftsprache_change_noout ~ Alter + Yearsincestroke + Schriftsprachepre, data = data) %>% summary()
+model4<- lm(Nachsprechen_change_noout ~ Alter + Yearsincestroke + Nachsprechen1_noout, data = data) %>% summary()
 
 
 ############################################################
@@ -394,38 +423,3 @@ ggplot(data_long, aes(x = variable, y = Prescore, group = time, color = as.facto
   guides(color = guide_legend(title = "Legend")) +
   scale_color_manual(values = color_codes)
 
-
-
-
-library(dplyr)
-
-# Perform median split and create a new variable
-data <- data %>%
-  mutate(Nachsprechen1_split = ifelse(Nachsprechen1_noout <= median(Nachsprechen1_noout, na.rm = TRUE), 1, 0))
-data <- data %>%
-  mutate(Benennen1_split = ifelse(Benennen1_noout <= median(Benennen1_noout, na.rm = TRUE), 1, 0))
-data <- data %>%
-  mutate(Sprachverständnispre_split = ifelse(Sprachverständnispre <= median(Sprachverständnispre, na.rm = TRUE), 1, 0))
-data <- data %>%
-  mutate(Schriftsprachepre_split = ifelse(Schriftsprachepre <= median(Schriftsprachepre, na.rm = TRUE), 1, 0))
-data <- data %>%
-  mutate(ACL = ifelse(ACL_change <= median(ACL_change, na.rm = TRUE), 1, 0))
-
-
-
-
-# Perform linear regression with the modified variable
-model1 <- lm(Benennen_change_noout ~ ACL, data = data) %>% summary()
-lm(Sprachverständnis_change_noout ~ ACL, data = data) %>% summary()
-lm(Schriftsprache_change_noout ~ ACL, data = data) %>% summary()
-lm(Nachsprechen_change_noout ~ ACL, data = data) %>% summary()
-lm(difference_ceti_noout ~ CETI1_noout_split, data = data) %>% summary()
-
-
-# Visual inspection of Q-Q plot for normality of residuals
-qqnorm(model1$residuals)
-qqline(model1$residuals)
-
-# Plot of residuals against predicted values for linearity
-plot(model$fitted.values, model$residuals, xlab = "Predicted Values", ylab = "Residuals")
-abline(h = 0, col = "red")
