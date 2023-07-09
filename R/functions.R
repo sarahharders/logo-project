@@ -7,7 +7,7 @@ descriptives <- function(data){
 
 # Outlier exclusion
 outlier_excluded_data <- function(data){
-  data[!(1:19 %in% identify_outliers(difference_ceti, data = data)$subj.number),]
+  data[!(1:18 %in% identify_outliers(difference_ceti, data = data)$subj.number),]
 }
 
 # Assumptions
@@ -89,6 +89,10 @@ Non_para_test <- function(data){
   data %>% {wilcox.test(.$`CETI 1`, .$`CETI 2`, paired = T)}
 }
 
+Non_para_test_Benennen <- function(data){
+  data %>% {wilcox.test(.$Benennen1, .$Benennen2, paired = T)}
+}
+
 para_test <- function(data){
   data %>% {t.test(.$`Score 1`, .$`Score 2`, paired = T)}
 }
@@ -106,5 +110,11 @@ regression <- function(data){
 }
 
 
+get_regct <- function(dataused){
+  reg_benennen <- lm(difference_acl_benennen ~ Alter + Yearsincestroke + Benennen1, data = dataused) %>% summary() %>% tidy()
+  reg_verständnis <- lm(difference_acl_verständnis ~ Alter + Yearsincestroke + Sprachverständnis1, data = dataused) %>% summary() %>% tidy()
+  reg_schrift <- lm(difference_acl_schrift ~ Alter + Yearsincestroke + Schriftsprache1, data = dataused) %>% summary() %>% tidy()
+  reg_sprechen <- lm(difference_acl_sprechen ~ Alter + Yearsincestroke + Nachsprechen1, data = dataused) %>% summary() %>% tidy()
 
-
+  bind_rows(reg_benennen, reg_verständnis, reg_schrift, reg_sprechen)
+}

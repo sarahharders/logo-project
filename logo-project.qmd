@@ -5,13 +5,13 @@ format: html
 editor: visual
 ---
 
-## Quarto
+## Logo Project
 
 Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
 
-## Running Code
+## Analysis Figures
 
-When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+Here I checked the violin plot of the ages and the qqplot for the noout CETI group.
 
 ```{r}
 #| echo: false
@@ -20,7 +20,7 @@ When you click the **Render** button a document will be generated that includes 
 library(targets)
 
 tar_read(violin_plot)
+tar_read(qqplot_noout_CETI)
 ```
 
 You can add options to executable code like this
-

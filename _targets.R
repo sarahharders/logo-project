@@ -11,7 +11,7 @@ library(tarchetypes)
 # Set target options:
 tar_option_set(
   packages = c("tibble", "tidyverse", "broom", "rstatix", "ggpubr", "patchwork", "correlation",
-               "jtools", "tarchetypes", "quarto"), # packages that your targets need to run
+               "jtools", "tarchetypes", "quarto", "readxl"), # packages that your targets need to run
   format = "rds" # default storage format
   # Set other options as needed.
 )
@@ -28,11 +28,15 @@ tar_source()
 
 # Replace the target list below with your own:
 list(
-  tar_target(file, "../Data.csv", format = "file"),
-  tar_target(data, read_csv(file) %>%
-               mutate(subj.number = 1:19,
+  tar_target(file, "../Data.xlsx", format = "file"),
+  tar_target(data, read_excel(file) %>%
+               mutate(subj.number = 1:18,
                  difference_score = `Score 1` - `Score 2`,
-                      difference_ceti = `CETI 1` - `CETI 2`,
+                      difference_ceti = `CETI 2` - `CETI 1`,
+                 difference_acl_benennen = Benennen2 - Benennen1,
+                 difference_acl_verständnis = Sprachverständnis2 - Sprachverständnis1,
+                 difference_acl_schrift = Schriftsprache2 - Schriftsprache1,
+                 difference_acl_sprechen = Nachsprechen2 - Nachsprechen1,
                       Gender_numeric = ifelse(.$Gender == "M", 0, 1))),
 
   tar_target(nooutlierdata, outlier_excluded_data(data)),
@@ -51,8 +55,10 @@ list(
   tar_target(t_test_score, para_test(data)),
   tar_target(CETI_nooout_t_test_score, para_test_ceti_noout(nooutlierdata)),
   tar_target(wilcox_test_ceti, Non_para_test(data)),
+  tar_target(test_Benennen, Non_para_test_Benennen(data)),
 
   tar_target(regression_analysis, regression(data)),
+  tar_target(reg_coefficients, get_regct(data)),
 
   tar_quarto(report, "logo-project.qmd", execute_params = list(your_param = data))
 )
